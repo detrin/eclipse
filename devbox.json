@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.14.1/.schema/devbox.schema.json",
+  "packages": [
+    "nodejs@20",
+    "pnpm@latest"
+  ],
+  "shell": {
+    "init_hook": [
+      "echo 'Setting up Node.js environment...'",
+      "node --version",
+      "pnpm --version"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+   Compiling eclipse v0.1.0 (/Users/danherma/Documents/projects-personal/eclipse)
+error[E0369]: binary operation `==` cannot be applied to type `moves::Move`
+   --> src/minimaxbot.rs:781:67
+    |
+781 |             if let Some(pos) = legal_moves.iter().position(|m| *m == hint) {
+    |                                                                -- ^^ ---- moves::Move
+    |                                                                |
+    |                                                                moves::Move
+    |
+note: an implementation of `PartialEq` might be missing for `moves::Move`
+   --> src/moves.rs:14:1
+    |
+14  | pub enum Move {
+    | ^^^^^^^^^^^^^ must implement `PartialEq`
+help: consider annotating `moves::Move` with `#[derive(PartialEq)]`
+   --> src/moves.rs:14:1
+    |
+14  + #[derive(PartialEq)]
+15  | pub enum Move {
+    |
+
+warning: unused variable: `first_msg_count`
+   --> src/display.rs:700:17
+    |
+700 |             let first_msg_count = game.status_messages.len();
+    |                 ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_first_msg_count`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+For more information about this error, try `rustc --explain E0369`.
+warning: `eclipse` (lib test) generated 1 warning
+error: could not compile `eclipse` (lib test) due to 1 previous error; 1 warning emitted

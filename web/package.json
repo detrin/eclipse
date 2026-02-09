@@ -1,0 +1,18 @@
+{
+  "name": "web",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "bash build.sh",
+    "build:astro": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@vercel/analytics": "^1.6.1",
+    "astro": "^5.17.1",
+    "tailwindcss": "^4.1.18"
+  }
+}

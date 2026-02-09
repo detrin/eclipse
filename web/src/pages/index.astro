@@ -1,0 +1,21 @@
+---
+import '../styles/global.css';
+import EclipseGame from '../components/EclipseGame.astro';
+import Analytics from '@vercel/analytics/astro';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Eclipse - Hexagonal Strategy Game</title>
+    <meta name="description" content="Play Eclipse, a strategic hexagonal board game with comets and satellite chains." />
+  </head>
+  <body>
+    <EclipseGame />
+    <Analytics />
+  </body>
+</html>

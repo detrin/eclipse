@@ -1,0 +1,1004 @@
+---
+// This is an Astro component that will handle the game UI
+---
+
+<div id="eclipse-game" class="flex flex-col items-center min-h-screen bg-black text-white p-8">
+  <!-- Game Mode Selection Screen -->
+  <div id="mode-selection" class="flex flex-col items-center justify-center min-h-screen">
+    <div class="w-full max-w-4xl px-8 text-center">
+      <h1 class="text-7xl font-bold mb-8">ECLIPSE</h1>
+      <p class="text-3xl text-gray-400 mb-20">A Hexagonal Strategy Game</p>
+
+      <div class="space-y-8">
+        <button
+          id="mode-human-vs-human"
+          class="w-full bg-gradient-to-r from-yellow-500 to-purple-500 text-white font-bold py-8 px-12 rounded-xl text-3xl hover:from-yellow-400 hover:to-purple-400 transition-all transform hover:scale-105 shadow-2xl"
+        >
+          Human vs Human
+        </button>
+
+        <button
+          id="mode-human-vs-bot"
+          class="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white font-bold py-8 px-12 rounded-xl text-3xl hover:from-blue-500 hover:to-blue-300 transition-all transform hover:scale-105 shadow-2xl"
+        >
+          Human vs Bot
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div id="game-header" class="w-full max-w-6xl mb-8 hidden">
+    <h1 class="text-4xl font-bold text-center mb-2">ECLIPSE</h1>
+    <p class="text-center text-gray-400">A Hexagonal Strategy Game</p>
+  </div>
+
+  <!-- Game Container -->
+  <div id="game-container" class="flex gap-8 w-full max-w-6xl hidden">
+    <!-- Left Panel: Controls -->
+    <div class="flex flex-col gap-4 w-80">
+      <!-- Game Status -->
+      <div class="bg-gray-900 border border-gray-700 rounded-lg p-4">
+        <h2 class="text-xl font-bold mb-4">Game Status</h2>
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span class="text-gray-400">Mode:</span>
+            <span id="game-mode" class="font-bold text-sm">Human vs Human</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">Current Turn:</span>
+            <span id="current-turn" class="font-bold"></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">Move:</span>
+            <span id="move-number" class="font-bold">0</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">Valid Moves:</span>
+            <span id="valid-move-count" class="font-bold">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rotation Control (Human vs Human only) -->
+      <div id="rotation-control" class="bg-gray-900 border border-gray-700 rounded-lg p-4">
+        <h2 class="text-xl font-bold mb-3">Rotation</h2>
+        <label class="flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            id="enable-rotation"
+            checked
+            class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+          />
+          <span class="ml-3 text-sm text-gray-300">Enable board rotation after moves</span>
+        </label>
+      </div>
+
+      <!-- Bot Controls -->
+      <div class="bg-gray-900 border border-gray-700 rounded-lg p-4">
+        <h2 class="text-xl font-bold mb-4">Bot Settings</h2>
+
+        <!-- Bot Status Indicator -->
+        <div id="bot-status" class="mb-4 p-4 bg-gray-800 border-2 border-gray-600 rounded-lg h-[60px] flex items-center justify-center">
+          <div class="flex items-center gap-3">
+            <div id="bot-spinner" class="hidden animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white flex-shrink-0"></div>
+            <span id="bot-status-text" class="text-sm font-semibold text-gray-400 whitespace-nowrap">Ready</span>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Depth Control -->
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">
+              Depth: <span id="depth-value" class="font-bold text-white">3</span>
+            </label>
+            <input
+              type="range"
+              id="depth-slider"
+              min="2"
+              max="7"
+              value="3"
+              class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            />
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Easy (2)</span>
+              <span>Expert (7)</span>
+            </div>
+          </div>
+
+          <!-- Weight Control -->
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">
+              Weight: <span id="weight-value" class="font-bold text-white">1.0</span>
+            </label>
+            <input
+              type="range"
+              id="weight-slider"
+              min="0.5"
+              max="2.0"
+              step="0.1"
+              value="1.0"
+              class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            />
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>0.5</span>
+              <span>2.0</span>
+            </div>
+          </div>
+
+          <!-- Bot Move Button -->
+          <button
+            id="bot-move-btn"
+            class="w-full bg-white text-black font-bold py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed"
+          >
+            Get Bot Move
+          </button>
+        </div>
+      </div>
+
+      <!-- Chain Info -->
+      <div class="bg-gray-900 border border-gray-700 rounded-lg p-4">
+        <h2 class="text-xl font-bold mb-3">Chain Guide</h2>
+        <div class="space-y-2 text-xs">
+          <div>
+            <p class="text-gray-300 font-semibold mb-1">Yellow (Light):</p>
+            <p class="text-gray-400 text-[11px]">Chains a, b, c, d, e</p>
+          </div>
+          <div>
+            <p class="text-gray-300 font-semibold mb-1">Purple (Dark):</p>
+            <p class="text-gray-400 text-[11px]">Chains f, g, h, i, j</p>
+          </div>
+          <div class="border-t border-gray-700 pt-2 mt-2">
+            <p class="text-gray-500 text-[10px]">
+              ℹ️ Satellites with the same letter are connected by a chain. Click to highlight.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Controls -->
+      <div class="bg-gray-900 border border-gray-700 rounded-lg p-4">
+        <h2 class="text-xl font-bold mb-4">Game Controls</h2>
+        <div class="space-y-2">
+          <button
+            id="new-game-btn"
+            class="w-full bg-gray-800 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-600"
+          >
+            New Game
+          </button>
+          <button
+            id="undo-btn"
+            class="w-full bg-gray-800 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors border border-gray-600 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed"
+            disabled
+          >
+            Undo Move
+          </button>
+        </div>
+      </div>
+
+      <!-- Rules Accordion -->
+      <div class="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+        <button
+          id="rules-toggle"
+          class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-800 transition-colors"
+        >
+          <h2 class="text-xl font-bold">Rules</h2>
+          <svg
+            id="rules-chevron"
+            class="w-5 h-5 transition-transform"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="rules-content" class="hidden p-4 pt-0 text-xs space-y-3 text-gray-300">
+          <div>
+            <h3 class="font-semibold text-white mb-1">Objective</h3>
+            <p>Immobilize your opponent's comet by blocking all legal moves or crossing their chains.</p>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-white mb-1">Pieces</h3>
+            <ul class="list-disc list-inside space-y-1">
+              <li><span class="font-medium">Comet</span> (large circle): Main piece that must remain mobile</li>
+              <li><span class="font-medium">Satellites</span> (small circles): Connected in pairs by chains</li>
+              <li><span class="font-medium">Chains</span>: Lines connecting satellite pairs (letters a-j)</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-white mb-1">Movement</h3>
+            <ul class="list-disc list-inside space-y-1">
+              <li>Comets move to adjacent empty hexes</li>
+              <li>Satellites move while maintaining fixed chain length</li>
+              <li>Chains can cross each other</li>
+              <li>Most recently moved chain is "on top"</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-white mb-1">Restrictions</h3>
+            <ul class="list-disc list-inside space-y-1">
+              <li>Comets cannot cross opponent chains</li>
+              <li>Crossed (pinned) chains cannot move</li>
+              <li>Chain length is fixed (Short=1, Long=2)</li>
+              <li>Pieces cannot stack on same hex</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-white mb-1">Winning</h3>
+            <p>Win by immobilizing the opponent's comet (no legal moves available).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div id="notification" class="hidden bg-red-900 border border-red-700 rounded-lg p-4">
+        <p id="notification-text" class="text-sm"></p>
+      </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+      <div class="bg-gray-900 border-4 border-gray-600 rounded-2xl p-12 max-w-md text-center transform scale-100 transition-all shadow-2xl">
+        <h2 id="game-over-title" class="text-6xl font-bold mb-6 text-white"></h2>
+        <p id="game-over-message" class="text-2xl text-gray-300 mb-8"></p>
+        <div class="space-y-4">
+          <button
+            id="play-again-btn"
+            class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-blue-500 hover:to-purple-500 transition-all transform hover:scale-105"
+          >
+            Play Again
+          </button>
+          <button
+            id="back-to-menu-btn"
+            class="w-full bg-gray-800 text-white font-bold py-4 px-8 rounded-xl text-xl hover:bg-gray-700 transition-all border border-gray-600"
+          >
+            Back to Menu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: Game Board -->
+    <div class="flex-1 flex items-center justify-center">
+      <svg
+        id="game-board"
+        class="w-full h-full"
+        style="max-width: 800px; max-height: 800px;"
+      >
+        <!-- Board will be rendered here by JavaScript -->
+      </svg>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Custom slider styles */
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: white;
+    cursor: pointer;
+    border-radius: 50%;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: white;
+    cursor: pointer;
+    border-radius: 50%;
+    border: none;
+  }
+
+  #game-board {
+    user-select: none;
+  }
+</style>
+
+<script>
+  import { initWasm, getInitialState, getValidMoves, getBotMove, verifyMove, isWinning } from '../lib/wasmApi';
+  import { getAllBoardHexes, hexToPixel, getHexagonPoints, HEX_SIZE, hexEquals } from '../lib/hexUtils';
+  import { applyMove, getOccupantAt, getChainById, chainIdToLetter, isCurrentPlayerPiece } from '../lib/gameLogic';
+  import type { GameState, Hex, Move, Occupant } from '../types/game';
+
+  // Game state
+  let gameState: GameState | null = null;
+  let selectedHex: Hex | null = null;
+  let validMovesForSelected: Move[] = [];
+  let allValidMoves: Move[] = [];
+  let wasmInitialized = false;
+  let gameMode: 'human-vs-human' | 'human-vs-bot' = 'human-vs-human';
+  let rotationEnabled = true;
+  let currentRotation = 0; // Track board rotation in degrees
+  let isBotThinking = false;
+
+  // UI Elements
+  const board = document.getElementById('game-board') as unknown as SVGElement;
+  const modeSelection = document.getElementById('mode-selection');
+  const gameHeader = document.getElementById('game-header');
+  const gameContainer = document.getElementById('game-container');
+  const gameModeEl = document.getElementById('game-mode');
+  const currentTurnEl = document.getElementById('current-turn');
+  const moveNumberEl = document.getElementById('move-number');
+  const validMoveCountEl = document.getElementById('valid-move-count');
+  const notificationEl = document.getElementById('notification');
+  const notificationTextEl = document.getElementById('notification-text');
+  const botMoveBtn = document.getElementById('bot-move-btn') as HTMLButtonElement;
+  const newGameBtn = document.getElementById('new-game-btn') as HTMLButtonElement;
+  const undoBtn = document.getElementById('undo-btn') as HTMLButtonElement;
+  const depthSlider = document.getElementById('depth-slider') as HTMLInputElement;
+  const weightSlider = document.getElementById('weight-slider') as HTMLInputElement;
+  const depthValue = document.getElementById('depth-value');
+  const weightValue = document.getElementById('weight-value');
+  const rotationControl = document.getElementById('rotation-control');
+  const enableRotationCheckbox = document.getElementById('enable-rotation') as HTMLInputElement;
+  const botStatus = document.getElementById('bot-status');
+  const botSpinner = document.getElementById('bot-spinner');
+  const botStatusText = document.getElementById('bot-status-text');
+  const modeHumanVsHuman = document.getElementById('mode-human-vs-human');
+  const modeHumanVsBot = document.getElementById('mode-human-vs-bot');
+  const gameOverModal = document.getElementById('game-over-modal');
+  const gameOverTitle = document.getElementById('game-over-title');
+  const gameOverMessage = document.getElementById('game-over-message');
+  const playAgainBtn = document.getElementById('play-again-btn');
+  const backToMenuBtn = document.getElementById('back-to-menu-btn');
+
+  // Start game with selected mode
+  async function startGame(mode: 'human-vs-human' | 'human-vs-bot') {
+    gameMode = mode;
+    currentRotation = 0;
+
+    // Hide mode selection, show game
+    if (modeSelection) modeSelection.classList.add('hidden');
+    if (gameHeader) gameHeader.classList.remove('hidden');
+    if (gameContainer) gameContainer.classList.remove('hidden');
+
+    // Update UI based on mode
+    if (gameModeEl) {
+      gameModeEl.textContent = mode === 'human-vs-human' ? 'Human vs Human' : 'Human vs Bot';
+    }
+
+    // Show/hide rotation control based on mode
+    if (rotationControl) {
+      if (mode === 'human-vs-human') {
+        rotationControl.classList.remove('hidden');
+      } else {
+        rotationControl.classList.add('hidden');
+      }
+    }
+
+    // Bot button is always visible in both modes
+
+    await initGame();
+  }
+
+  // Initialize WASM and game
+  async function initGame() {
+    try {
+      // Show loading message
+      showNotification('Loading game engine...', 'info');
+
+      // Initialize WASM module first
+      if (!wasmInitialized) {
+        await initWasm();
+        wasmInitialized = true;
+      }
+
+      gameState = await getInitialState();
+      await updateValidMoves();
+      renderBoard();
+      updateUI();
+      showNotification('Game started! Yellow (Light) moves first. Running 100% in your browser with WebAssembly!', 'info');
+    } catch (error) {
+      showNotification(`Failed to initialize game: ${error}`, 'error');
+      console.error('Initialization error:', error);
+    }
+  }
+
+  // Update valid moves
+  async function updateValidMoves() {
+    if (!gameState) return;
+
+    try {
+      const response = await getValidMoves(gameState, gameState.current_turn);
+      if (response.success && response.valid_moves) {
+        allValidMoves = response.valid_moves;
+      } else {
+        allValidMoves = [];
+      }
+    } catch (error) {
+      console.error('Failed to fetch valid moves:', error);
+      allValidMoves = [];
+    }
+  }
+
+  // Render the game board
+  function renderBoard() {
+    if (!gameState) return;
+
+    // Clear board
+    board.innerHTML = '';
+
+    // Calculate board dimensions
+    const allHexes = getAllBoardHexes();
+    const positions = allHexes.map(hexToPixel);
+
+    const minX = Math.min(...positions.map(p => p.x));
+    const maxX = Math.max(...positions.map(p => p.x));
+    const minY = Math.min(...positions.map(p => p.y));
+    const maxY = Math.max(...positions.map(p => p.y));
+
+    const padding = HEX_SIZE * 2;
+    const width = maxX - minX + padding * 2;
+    const height = maxY - minY + padding * 2;
+
+    board.setAttribute('viewBox', `${minX - padding} ${minY - padding} ${width} ${height}`);
+
+    // Determine the last moved hexes (from and to)
+    let lastMovedFromHex: Hex | null = null;
+    let lastMovedToHex: Hex | null = null;
+    let lastMovePlayer: string | null = null;
+    if (gameState.move_history.length > 0) {
+      const lastMove = gameState.move_history[gameState.move_history.length - 1];
+      // The player who made the last move is opposite to current turn
+      lastMovePlayer = gameState.current_turn === 'Light' ? 'Dark' : 'Light';
+
+      if ('MoveComet' in lastMove) {
+        lastMovedToHex = lastMove.MoveComet;
+        // For comets, we can't easily track the previous position without additional state
+        // So we only highlight the destination
+      } else if ('MoveSatellite' in lastMove) {
+        lastMovedFromHex = lastMove.MoveSatellite.old_pos;
+        lastMovedToHex = lastMove.MoveSatellite.new_pos;
+      }
+    }
+
+    // Create groups for different layers
+    const hexGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const chainGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const pieceGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const highlightGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+    // Apply rotation to the board
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    const rotationTransform = `rotate(${currentRotation} ${centerX} ${centerY})`;
+    [hexGroup, chainGroup, pieceGroup, highlightGroup].forEach(group => {
+      group.setAttribute('transform', rotationTransform);
+    });
+
+    // Draw chains first (behind everything)
+    if (gameState.chains && Array.isArray(gameState.chains) && gameState.chains.length > 0) {
+      // Sort chains by last moved time (oldest first, so newest renders on top)
+      const sortedChains = [...gameState.chains].sort((a, b) => {
+        const aLastMoved = Math.max(a.head_last_moved, a.tail_last_moved);
+        const bLastMoved = Math.max(b.head_last_moved, b.tail_last_moved);
+        return aLastMoved - bLastMoved;
+      });
+
+      sortedChains.forEach((chain) => {
+        const headPos = hexToPixel(chain.head);
+        const tailPos = hexToPixel(chain.tail);
+        const chainColor = chain.owner === 'Light' ? '#fbbf24' : '#a855f7'; // Yellow or Purple
+
+        // Check if this chain's satellites are selected
+        const isChainSelected = selectedHex && (hexEquals(selectedHex, chain.head) || hexEquals(selectedHex, chain.tail));
+
+      // Draw background line (white outline for contrast)
+      const bgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      bgLine.setAttribute('x1', headPos.x.toString());
+      bgLine.setAttribute('y1', headPos.y.toString());
+      bgLine.setAttribute('x2', tailPos.x.toString());
+      bgLine.setAttribute('y2', tailPos.y.toString());
+      bgLine.setAttribute('stroke', '#ffffff');
+      bgLine.setAttribute('stroke-width', isChainSelected ? '7' : '6');
+      bgLine.setAttribute('opacity', isChainSelected ? '0.4' : '0.3');
+      bgLine.setAttribute('stroke-linecap', 'round');
+      chainGroup.appendChild(bgLine);
+
+      // Draw main chain line
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', headPos.x.toString());
+      line.setAttribute('y1', headPos.y.toString());
+      line.setAttribute('x2', tailPos.x.toString());
+      line.setAttribute('y2', tailPos.y.toString());
+      line.setAttribute('stroke', chainColor);
+      line.setAttribute('stroke-width', isChainSelected ? '5' : '4');
+      line.setAttribute('opacity', '1.0');
+      line.setAttribute('stroke-linecap', 'round');
+      chainGroup.appendChild(line);
+    });
+    }
+
+    // Draw hexes
+    allHexes.forEach(hex => {
+      const pos = hexToPixel(hex);
+      const occupant = getOccupantAt(gameState!, hex);
+      const isMovedFrom = lastMovedFromHex && hexEquals(hex, lastMovedFromHex);
+      const isMovedTo = lastMovedToHex && hexEquals(hex, lastMovedToHex);
+
+      // Determine fill color based on state
+      let fillColor: string;
+      if (isMovedTo && lastMovePlayer) {
+        // Highlight destination hex with player color (more opaque)
+        fillColor = lastMovePlayer === 'Light'
+          ? 'rgba(251, 191, 36, 0.4)'  // Light yellow for Light player (destination)
+          : 'rgba(168, 85, 247, 0.4)';  // Light purple for Dark player (destination)
+      } else if (isMovedFrom && lastMovePlayer) {
+        // Highlight source hex with player color (less opaque)
+        fillColor = lastMovePlayer === 'Light'
+          ? 'rgba(251, 191, 36, 0.2)'  // Light yellow for Light player (source)
+          : 'rgba(168, 85, 247, 0.2)';  // Light purple for Dark player (source)
+      } else if (occupant) {
+        fillColor = 'rgba(26, 26, 26, 0.5)';
+      } else {
+        fillColor = 'transparent';
+      }
+
+      const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      polygon.setAttribute('points', getHexagonPoints(HEX_SIZE));
+      polygon.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
+      polygon.setAttribute('fill', fillColor);
+      polygon.setAttribute('stroke', selectedHex && hexEquals(hex, selectedHex) ? '#ffffff' : '#333333');
+      polygon.setAttribute('stroke-width', selectedHex && hexEquals(hex, selectedHex) ? '3' : '1');
+      polygon.style.cursor = 'pointer';
+
+      polygon.addEventListener('click', () => handleHexClick(hex));
+      polygon.addEventListener('mouseenter', () => {
+        if (!selectedHex || !hexEquals(hex, selectedHex)) {
+          polygon.setAttribute('stroke', '#666666');
+          polygon.setAttribute('stroke-width', '2');
+        }
+      });
+      polygon.addEventListener('mouseleave', () => {
+        if (!selectedHex || !hexEquals(hex, selectedHex)) {
+          polygon.setAttribute('stroke', '#333333');
+          polygon.setAttribute('stroke-width', '1');
+        }
+      });
+
+      hexGroup.appendChild(polygon);
+    });
+
+    // Draw valid move indicators (holes)
+    if (selectedHex && validMovesForSelected.length > 0) {
+      validMovesForSelected.forEach(move => {
+        let targetHex: Hex | null = null;
+
+        if ('MoveComet' in move) {
+          targetHex = move.MoveComet;
+        } else if ('MoveSatellite' in move) {
+          targetHex = move.MoveSatellite.new_pos;
+        }
+
+        if (targetHex) {
+          const pos = hexToPixel(targetHex);
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('cx', pos.x.toString());
+          circle.setAttribute('cy', pos.y.toString());
+          circle.setAttribute('r', '12');
+          circle.setAttribute('fill', '#ffffff');
+          circle.setAttribute('opacity', '0.5');
+          circle.style.cursor = 'pointer';
+          circle.addEventListener('click', () => handleHexClick(targetHex!));
+          highlightGroup.appendChild(circle);
+        }
+      });
+    }
+
+    // Draw pieces
+    gameState.occupied.forEach(entry => {
+      const pos = hexToPixel(entry.hex);
+
+      if (entry.occupant.Comet) {
+        // Draw comet
+        const color = entry.occupant.Comet === 'Light' ? '#fbbf24' : '#a855f7'; // Yellow or Purple
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', pos.x.toString());
+        circle.setAttribute('cy', pos.y.toString());
+        circle.setAttribute('r', '18');
+        circle.setAttribute('fill', color);
+        circle.setAttribute('stroke', '#ffffff');
+        circle.setAttribute('stroke-width', '2');
+        circle.style.cursor = 'pointer';
+        circle.addEventListener('click', () => handleHexClick(entry.hex));
+        pieceGroup.appendChild(circle);
+      } else if (entry.occupant.Satellite) {
+        // Draw satellite
+        const [chainId, owner] = entry.occupant.Satellite;
+        const color = owner === 'Light' ? '#fbbf24' : '#a855f7'; // Yellow or Purple
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', pos.x.toString());
+        circle.setAttribute('cy', pos.y.toString());
+        circle.setAttribute('r', '12');
+        circle.setAttribute('fill', color);
+        circle.setAttribute('stroke', '#ffffff');
+        circle.setAttribute('stroke-width', '1.5');
+        circle.style.cursor = 'pointer';
+        circle.addEventListener('click', () => handleHexClick(entry.hex));
+        pieceGroup.appendChild(circle);
+
+        // Add chain letter
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', pos.x.toString());
+        text.setAttribute('y', (pos.y + 4).toString());
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-size', '12');
+        text.setAttribute('font-weight', 'bold');
+        text.setAttribute('fill', '#000000');
+        text.style.cursor = 'pointer';
+        text.style.pointerEvents = 'none';
+        text.textContent = chainIdToLetter(chainId);
+        pieceGroup.appendChild(text);
+      }
+    });
+
+    // Append all groups in order (bottom to top)
+    board.appendChild(hexGroup);      // Hexagons at bottom
+    board.appendChild(chainGroup);    // Chains above hexagons
+    board.appendChild(highlightGroup); // Valid move indicators
+    board.appendChild(pieceGroup);    // Pieces on top
+  }
+
+  // Handle hex click
+  async function handleHexClick(hex: Hex) {
+    if (!gameState) return;
+
+    // If there's a selected hex and this click is on a valid move target
+    if (selectedHex) {
+      const moveToMake = validMovesForSelected.find(move => {
+        if ('MoveComet' in move) {
+          return hexEquals(move.MoveComet, hex);
+        } else if ('MoveSatellite' in move) {
+          return hexEquals(move.MoveSatellite.new_pos, hex);
+        }
+        return false;
+      });
+
+      if (moveToMake) {
+        await makeMove(moveToMake);
+        selectedHex = null;
+        validMovesForSelected = [];
+        renderBoard();
+        return;
+      }
+    }
+
+    // If clicking on a piece that belongs to the current player
+    if (isCurrentPlayerPiece(gameState, hex)) {
+      selectedHex = hex;
+
+      // Filter valid moves for this hex
+      validMovesForSelected = allValidMoves.filter(move => {
+        if ('MoveComet' in move) {
+          // Check if comet is at this hex
+          const cometPos = gameState!.current_turn === 'Light'
+            ? gameState!.comet_light
+            : gameState!.comet_dark;
+          return hexEquals(cometPos, hex);
+        } else if ('MoveSatellite' in move) {
+          return hexEquals(move.MoveSatellite.old_pos, hex);
+        }
+        return false;
+      });
+
+      renderBoard();
+    } else {
+      // Deselect
+      selectedHex = null;
+      validMovesForSelected = [];
+      renderBoard();
+    }
+  }
+
+  // Rotate the board 180 degrees
+  function rotateBoard() {
+    currentRotation = (currentRotation + 180) % 360;
+    renderBoard();
+  }
+
+  // Make a move
+  async function makeMove(move: Move, isManualBotMove = false) {
+    if (!gameState) return;
+
+    try {
+      // Verify move with backend
+      const verifyResponse = await verifyMove(gameState, gameState.current_turn, move);
+
+      if (!verifyResponse.success || verifyResponse.is_legal === false) {
+        showNotification(
+          `Illegal move: ${verifyResponse.reason || verifyResponse.error || 'Unknown error'}`,
+          'error'
+        );
+        return;
+      }
+
+      // Apply move
+      gameState = applyMove(gameState, move);
+      await updateValidMoves();
+      updateUI();
+      renderBoard();
+
+      // Check for win condition via engine
+      const winningResponse = await isWinning(gameState);
+      if (winningResponse.success && winningResponse.is_winning && winningResponse.winner) {
+        showGameOver(winningResponse.winner);
+        if (botMoveBtn) botMoveBtn.disabled = true;
+        return;
+      }
+      if (!winningResponse.success) {
+        showNotification(`Failed to check win state: ${winningResponse.error || 'Unknown error'}`, 'error');
+      }
+
+      showNotification(`Move made. ${gameState.current_turn}'s turn.`, 'info');
+
+      // Handle board rotation in Human vs Human mode (not for manual bot moves)
+      if (gameMode === 'human-vs-human' && rotationEnabled && !isManualBotMove) {
+        // Add a small delay before rotation for visual clarity
+        setTimeout(() => {
+          rotateBoard();
+        }, 300);
+      }
+
+      // Handle auto-bot move in Human vs Bot mode
+      if (gameMode === 'human-vs-bot' && gameState.current_turn === 'Dark' && !isManualBotMove) {
+        // Add a small delay before bot moves
+        setTimeout(() => {
+          handleBotMove(true);
+        }, 500);
+      }
+    } catch (error) {
+      showNotification(`Error making move: ${error}`, 'error');
+    }
+  }
+
+  // Get bot move
+  async function handleBotMove(isAutoMove = false) {
+    if (!gameState || isBotThinking) return;
+
+    const depth = parseInt(depthSlider.value);
+    const weight = parseFloat(weightSlider.value);
+
+    isBotThinking = true;
+    const startTime = Date.now();
+
+    // Update bot status to calculating state
+    if (botStatus && botSpinner && botStatusText) {
+      botStatus.classList.remove('bg-gray-800', 'border-gray-600');
+      botStatus.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-purple-600', 'border-blue-400', 'animate-pulse');
+      botSpinner.classList.remove('hidden');
+      botStatusText.textContent = 'Calculating move...';
+      botStatusText.classList.remove('text-gray-400');
+      botStatusText.classList.add('text-white', 'font-bold');
+    }
+
+    // Update button state if manual move
+    if (botMoveBtn && !isAutoMove) {
+      botMoveBtn.disabled = true;
+      botMoveBtn.textContent = 'Thinking...';
+    }
+
+    try {
+      const response = await getBotMove(gameState, gameState.current_turn, depth, weight);
+
+      if (response.success && response.best_move) {
+        await makeMove(response.best_move, true); // Pass true to indicate manual bot move
+      } else {
+        showNotification(`Bot error: ${response.error || 'Unknown error'}`, 'error');
+      }
+    } catch (error) {
+      showNotification(`Failed to get bot move: ${error}`, 'error');
+    } finally {
+      // Ensure the indicator is visible for at least 800ms for better UX
+      const elapsedTime = Date.now() - startTime;
+      const minDisplayTime = 800;
+      const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+
+      setTimeout(() => {
+        isBotThinking = false;
+
+        // Reset bot status to ready state
+        if (botStatus && botSpinner && botStatusText) {
+          botStatus.classList.remove('bg-gradient-to-r', 'from-blue-600', 'to-purple-600', 'border-blue-400', 'animate-pulse');
+          botStatus.classList.add('bg-gray-800', 'border-gray-600');
+          botSpinner.classList.add('hidden');
+          botStatusText.textContent = 'Ready';
+          botStatusText.classList.remove('text-white', 'font-bold');
+          botStatusText.classList.add('text-gray-400');
+        }
+
+        // Reset button state if manual move
+        if (botMoveBtn && !isAutoMove) {
+          botMoveBtn.disabled = false;
+          botMoveBtn.textContent = 'Get Bot Move';
+        }
+      }, remainingTime);
+    }
+  }
+
+  // Update UI elements
+  function updateUI() {
+    if (!gameState) return;
+
+    if (currentTurnEl) {
+      currentTurnEl.textContent = gameState.current_turn;
+      currentTurnEl.style.color = gameState.current_turn === 'Light' ? '#fbbf24' : '#a855f7';
+    }
+
+    if (moveNumberEl) {
+      moveNumberEl.textContent = gameState.move_history.length.toString();
+    }
+
+    if (validMoveCountEl) {
+      validMoveCountEl.textContent = allValidMoves.length.toString();
+    }
+
+    if (undoBtn) {
+      undoBtn.disabled = gameState.move_history.length === 0;
+    }
+  }
+
+  // Show notification
+  function showNotification(message: string, type: 'info' | 'error' | 'success') {
+    if (!notificationEl || !notificationTextEl) return;
+
+    notificationTextEl.textContent = message;
+    notificationEl.classList.remove('hidden', 'bg-red-900', 'border-red-700', 'bg-green-900', 'border-green-700', 'bg-blue-900', 'border-blue-700');
+
+    if (type === 'error') {
+      notificationEl.classList.add('bg-red-900', 'border-red-700');
+    } else if (type === 'success') {
+      notificationEl.classList.add('bg-green-900', 'border-green-700');
+    } else {
+      notificationEl.classList.add('bg-blue-900', 'border-blue-700');
+    }
+
+    setTimeout(() => {
+      notificationEl.classList.add('hidden');
+    }, 5000);
+  }
+
+  // Show game over modal
+  function showGameOver(winner: string) {
+    if (!gameOverModal || !gameOverTitle || !gameOverMessage) return;
+
+    // Get the modal content div (direct child of the modal)
+    const modalContent = gameOverModal.querySelector('div') as HTMLElement;
+
+    if (gameMode === 'human-vs-bot') {
+      // In Human vs Bot mode
+      if (winner === 'Light') {
+        gameOverTitle.textContent = 'YOU WON!';
+        gameOverTitle.classList.remove('text-red-500', 'text-yellow-500', 'text-purple-500');
+        gameOverTitle.classList.add('text-green-500');
+        gameOverMessage.textContent = 'Congratulations! You defeated the bot!';
+        if (modalContent) {
+          modalContent.classList.remove('border-red-500', 'border-yellow-500', 'border-purple-500');
+          modalContent.classList.add('border-green-500');
+        }
+      } else {
+        gameOverTitle.textContent = 'YOU LOST!';
+        gameOverTitle.classList.remove('text-green-500', 'text-yellow-500', 'text-purple-500');
+        gameOverTitle.classList.add('text-red-500');
+        gameOverMessage.textContent = 'The bot won this time. Try again!';
+        if (modalContent) {
+          modalContent.classList.remove('border-green-500', 'border-yellow-500', 'border-purple-500');
+          modalContent.classList.add('border-red-500');
+        }
+      }
+    } else {
+      // In Human vs Human mode
+      gameOverTitle.textContent = `${winner} WINS!`;
+      gameOverTitle.classList.remove('text-red-500', 'text-green-500');
+      if (winner === 'Light') {
+        gameOverTitle.classList.remove('text-purple-500');
+        gameOverTitle.classList.add('text-yellow-500');
+        if (modalContent) {
+          modalContent.classList.remove('border-green-500', 'border-red-500', 'border-purple-500');
+          modalContent.classList.add('border-yellow-500');
+        }
+      } else {
+        gameOverTitle.classList.remove('text-yellow-500');
+        gameOverTitle.classList.add('text-purple-500');
+        if (modalContent) {
+          modalContent.classList.remove('border-green-500', 'border-red-500', 'border-yellow-500');
+          modalContent.classList.add('border-purple-500');
+        }
+      }
+      gameOverMessage.textContent = `Congratulations to ${winner}!`;
+    }
+
+    gameOverModal.classList.remove('hidden');
+  }
+
+  // Event listeners
+  // Mode selection
+  if (modeHumanVsHuman) {
+    modeHumanVsHuman.addEventListener('click', () => startGame('human-vs-human'));
+  }
+
+  if (modeHumanVsBot) {
+    modeHumanVsBot.addEventListener('click', () => startGame('human-vs-bot'));
+  }
+
+  // Rotation checkbox
+  if (enableRotationCheckbox) {
+    enableRotationCheckbox.addEventListener('change', () => {
+      rotationEnabled = enableRotationCheckbox.checked;
+    });
+  }
+
+  if (botMoveBtn) {
+    botMoveBtn.addEventListener('click', () => handleBotMove(false));
+  }
+
+  if (newGameBtn) {
+    newGameBtn.addEventListener('click', () => {
+      location.reload();
+    });
+  }
+
+  if (depthSlider && depthValue) {
+    depthSlider.addEventListener('input', () => {
+      depthValue.textContent = depthSlider.value;
+    });
+  }
+
+  if (weightSlider && weightValue) {
+    weightSlider.addEventListener('input', () => {
+      weightValue.textContent = parseFloat(weightSlider.value).toFixed(1);
+    });
+  }
+
+  // Rules accordion toggle
+  const rulesToggle = document.getElementById('rules-toggle');
+  const rulesContent = document.getElementById('rules-content');
+  const rulesChevron = document.getElementById('rules-chevron');
+
+  if (rulesToggle && rulesContent && rulesChevron) {
+    rulesToggle.addEventListener('click', () => {
+      const isHidden = rulesContent.classList.contains('hidden');
+
+      if (isHidden) {
+        rulesContent.classList.remove('hidden');
+        rulesChevron.style.transform = 'rotate(180deg)';
+      } else {
+        rulesContent.classList.add('hidden');
+        rulesChevron.style.transform = 'rotate(0deg)';
+      }
+    });
+  }
+
+  // Game over modal buttons
+  if (playAgainBtn) {
+    playAgainBtn.addEventListener('click', () => {
+      location.reload();
+    });
+  }
+
+  if (backToMenuBtn) {
+    backToMenuBtn.addEventListener('click', () => {
+      if (gameOverModal) gameOverModal.classList.add('hidden');
+      if (gameContainer) gameContainer.classList.add('hidden');
+      if (gameHeader) gameHeader.classList.add('hidden');
+      if (modeSelection) modeSelection.classList.remove('hidden');
+
+      // Reset game state
+      gameState = null;
+      selectedHex = null;
+      validMovesForSelected = [];
+      allValidMoves = [];
+      currentRotation = 0;
+    });
+  }
+
+  // Don't auto-initialize - wait for mode selection
+</script>

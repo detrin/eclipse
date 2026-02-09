@@ -1,0 +1,15 @@
+{
+  "name": "eclipse",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "eclipse_bg.wasm",
+    "eclipse.js",
+    "eclipse.d.ts"
+  ],
+  "main": "eclipse.js",
+  "types": "eclipse.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
